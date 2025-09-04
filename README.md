@@ -2,9 +2,9 @@
   <h1>⚙️ TensorMill</h1>
   <p><strong>Industrial-strength synthetic tensor generation for ML pipelines</strong></p>
   
-  [![Crates.io](https://img.shields.io/crates/v/tensormill.svg)](https://crates.io/crates/tensormill)
-  [![Documentation](https://docs.rs/tensormill/badge.svg)](https://docs.rs/tensormill)
   [![License](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](LICENSE)
+  [![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org)
+  [![GitHub](https://img.shields.io/badge/github-atveit%2FTensorMill-green.svg)](https://github.com/atveit/TensorMill)
 </div>
 
 ---
@@ -25,20 +25,22 @@ Just as a lumber mill efficiently processes logs into usable timber, TensorMill 
 ## Quick Start
 
 ```bash
-# Install TensorMill
-cargo install tensormill
+# Clone and build from source
+git clone https://github.com/atveit/TensorMill.git
+cd TensorMill
+cargo build --release
 
 # Generate a compact model (440MB) in seconds
-tensormill --model-type gpt-oss-20b --size compact --output ./weights
+./target/release/tensormill --model-type gpt-oss-20b --size compact --output ./weights
 
 # Generate a full model (13GB) with progress tracking
-tensormill --model-type gpt-oss-20b --size full --output ./weights --progress
+./target/release/tensormill --model-type gpt-oss-20b --size full --output ./weights --progress
 ```
 
 ## 📚 Documentation
 
 ### Installation
-**TLDR**: Install with `cargo install tensormill` or build from source with `cargo build --release`
+**TLDR**: Build from source with `cargo build --release`
 
 For detailed installation instructions, dependency management, and platform-specific notes, see [docs/INSTALL.md](docs/INSTALL.md).
 
