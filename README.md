@@ -4,7 +4,6 @@
   
   [![Crates.io](https://img.shields.io/crates/v/tensormill.svg)](https://crates.io/crates/tensormill)
   [![Documentation](https://docs.rs/tensormill/badge.svg)](https://docs.rs/tensormill)
-  [![CI](https://github.com/username/tensormill/workflows/CI/badge.svg)](https://github.com/username/tensormill/actions)
   [![License](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](LICENSE)
 </div>
 
@@ -30,29 +29,28 @@ Just as a lumber mill efficiently processes logs into usable timber, TensorMill 
 cargo install tensormill
 
 # Generate a compact model (440MB) in seconds
-tensormill --model gpt-oss-20b --size compact --output ./weights
+tensormill --model-type gpt-oss-20b --size compact --output ./weights
 
 # Generate a full model (13GB) with progress tracking
-tensormill --model gpt-oss-20b --size full --output ./weights --progress
+tensormill --model-type gpt-oss-20b --size full --output ./weights --progress
 ```
 
-## Installation
+## 📚 Documentation
 
-### From Source
+### Installation
+**TLDR**: Install with `cargo install tensormill` or build from source with `cargo build --release`
 
-```bash
-git clone https://github.com/example/tensormill
-cd tensormill
-cargo build --release
-```
+For detailed installation instructions, dependency management, and platform-specific notes, see [docs/INSTALL.md](docs/INSTALL.md).
 
-### From Crates.io
+### Tutorial
+**TLDR**: Use CLI for quick generation, library API for integration, supports compact/full models with deterministic seeds.
 
-```bash
-cargo install tensormill
-```
+For comprehensive usage examples, advanced configurations, and integration patterns, see [docs/TUTORIAL.md](docs/TUTORIAL.md).
 
-See [INSTALL.md](INSTALL.md) for detailed installation instructions.
+### Architecture
+**TLDR**: Modular Rust design with parallel tensor generation, MXFP4 packing, and streaming SafeTensors export achieving ~540 MB/s throughput.
+
+For technical details, module descriptions, and performance characteristics, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Usage
 
@@ -97,113 +95,25 @@ result.print_summary();
 ## Model Specifications
 
 ### GPT-OSS-20B
-- **Layers**: 24 transformer blocks
-- **Experts**: 32 (4 active per token)
 - **Parameters**: ~20B total, 3.6B active
-- **Formats**: 13.76GB (full), 440MB (compact)
-- **MXFP4 Packing**: Expert weights packed at 4-bits (2 values/byte)
-- **Generation Time**: ~40s (full), ~3s (compact)
-- **Sharding Pattern** (Matches HuggingFace distribution):
-  - Shard 0: Layers 0, 1, 10-18
-  - Shard 1: Layers 2-6, 18-23
-  - Shard 2: Layers 6-9 + embeddings + lm_head
-- **Generated Sizes** (Synthetic):
-  - Total: 13.76GB (exact match to HF total)
-  - Shard 0: 4.5GB | Shard 1: 4.4GB | Shard 2: 3.9GB
-  - Note: ~0.3GB smaller per shard than HF due to omitted `self_attn.sinks` tensors
+- **Format**: 13.76GB (full), 440MB (compact)
+- **Generation**: ~40s (full), ~3s (compact)
+- **MXFP4**: Expert weights packed at 4-bits (2 values/byte)
 
 ### GPT-OSS-120B
-- **Layers**: 36 transformer blocks
-- **Experts**: 128 (4 active per token)
 - **Parameters**: ~120B total
-- **Formats**: 65GB (full), 2GB (compact)
-- **Generation Time**: ~2min (full), ~6s (compact)
-
-## 🚀 Performance
-
-TensorMill achieves industrial-scale throughput:
-
-| Operation | Speed | Details |
-|-----------|-------|---------|
-| Tensor Generation | ~950 MB/s | Parallel processing with Rayon |
-| MXFP4 Quantization | ~4.7 GB/s | SIMD-optimized operations |
-| SafeTensors Export | ~1.3 GB/s | Zero-copy serialization |
-| **Overall** | **~540 MB/s** | End-to-end throughput |
-
-Benchmarked on Apple M2 Max (32GB RAM)
-
-## Output Structure
-
-```
-output/
-├── config.json                    # Model architecture configuration
-├── tokenizer.json                 # Tokenizer vocabulary
-├── tokenizer_config.json          # Tokenizer settings
-├── generation_config.json         # Generation parameters
-├── special_tokens_map.json        # Special token mappings
-├── model.safetensors.index.json   # Shard index (multi-file models)
-└── model*.safetensors             # Weight files (sharded or single)
-```
-
-## CI/CD Integration
-
-### GitHub Actions
-
-```yaml
-- name: Setup TensorMill
-  run: cargo install tensormill
-
-- name: Generate Test Model
-  run: tensormill --model gpt-oss-20b --size compact --output test_model --seed ${{ github.run_number }}
-
-- name: Run Tests
-  run: python test_model_loading.py test_model
-```
-
-### Docker
-
-```dockerfile
-FROM rust:1.75 as builder
-RUN cargo install tensormill
-
-FROM debian:bookworm-slim
-COPY --from=builder /usr/local/cargo/bin/tensormill /usr/local/bin/
-ENTRYPOINT ["tensormill"]
-```
+- **Format**: 65GB (full), 2GB (compact)
+- **Generation**: ~2min (full), ~6s (compact)
 
 ## Features
 
 - ✅ **Multi-model Support**: GPT-OSS-20B and GPT-OSS-120B
 - ✅ **Format Flexibility**: Sharded, unsharded, original formats
-- ✅ **MXFP4 Quantization**: Bit-exact 4-bit packing (2 values per byte)
-- ✅ **HuggingFace Compatible**: Exact format match including quirky naming
-- ✅ **Non-Contiguous Sharding**: Matches real model tensor distribution
+- ✅ **MXFP4 Quantization**: Bit-exact 4-bit packing
+- ✅ **HuggingFace Compatible**: Exact format match
 - ✅ **Complete Metadata**: All required config and tokenizer files
-- ✅ **Deterministic Generation**: Reproducible with seed control
-- ✅ **Progress Tracking**: Real-time generation progress
-- ✅ **Memory Efficient**: Streaming generation, minimal overhead
+- ✅ **Deterministic**: Reproducible with seed control
 - ✅ **Parallel Processing**: Leverages all CPU cores
-
-## Documentation
-
-- [INSTALL.md](INSTALL.md) - Installation guide
-- [TUTORIAL.md](TUTORIAL.md) - Comprehensive usage examples
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Technical architecture details
-- [API Docs](https://docs.rs/tensormill) - Rust API documentation
-
-## Use Cases
-
-### 🧪 Testing
-Generate consistent test models for unit and integration tests without downloading multi-gigabyte files.
-
-### 🔄 CI/CD
-Create fresh models for each pipeline run, ensuring tests aren't dependent on external resources.
-
-### 📊 Benchmarking
-Generate models of various sizes to benchmark loading times, memory usage, and inference performance.
-
-### 🛠️ Development
-Quickly create models for local development without managing large binary files.
 
 ## Contributing
 
@@ -211,11 +121,7 @@ Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) 
 
 ## License
 
-TensorMill is dual-licensed under MIT and Apache 2.0 licenses. See [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE) for details.
-
-## Acknowledgments
-
-Built for the GPT-OSS and ML communities to enable faster development and testing workflows.
+TensorMill is dual-licensed under MIT and Apache 2.0 licenses.
 
 ---
 
